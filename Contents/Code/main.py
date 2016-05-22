@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import constants
 import plex_util
 import pagination
 import history
 from flow_builder import FlowBuilder
-from media_info import MediaInfo
 from daytse_plex_service import DaytsePlexService
 
 service = DaytsePlexService()
 
 builder = FlowBuilder()
 
-@route(constants.PREFIX + "/movies")
+@route(PREFIX + "/movies")
 def HandleMovies(page=1):
     oc = ObjectContainer(title1=unicode(L("Movies")))
 
@@ -33,7 +31,7 @@ def HandleMovies(page=1):
 
     return oc
 
-@route(constants.PREFIX + "/latest_episodes")
+@route(PREFIX + "/latest_episodes")
 def HandleLatestEpisodes(page=1):
     oc = ObjectContainer(title1=unicode(L("Latest Episodes")))
 
@@ -54,7 +52,7 @@ def HandleLatestEpisodes(page=1):
 
     return oc
 
-@route(constants.PREFIX + "/series")
+@route(PREFIX + "/series")
 def HandleSeries(page=1):
     oc = ObjectContainer(title1=unicode(L("Series")))
 
@@ -75,7 +73,7 @@ def HandleSeries(page=1):
 
     return oc
 
-@route(constants.PREFIX + "/serie")
+@route(PREFIX + "/serie")
 def HandleSerie(serieName, id):
     oc = ObjectContainer(title1=unicode(serieName))
 
@@ -118,7 +116,7 @@ def HandleSerie(serieName, id):
     #             title = season_title
     #         ))
 
-@route(constants.PREFIX + "/season")
+@route(PREFIX + "/season")
 def HandleSeason(serieName, id):
     oc = ObjectContainer(title1=unicode(serieName))
 
@@ -135,11 +133,11 @@ def HandleSeason(serieName, id):
 
     return oc
 
-@route(constants.PREFIX + '/episode')
+@route(PREFIX + '/episode')
 def HandleEpisode(operation=None, container=False, **params):
     return HandleMovie(operation=operation, container=container, **params)
 
-@route(constants.PREFIX + "/genres")
+@route(PREFIX + "/genres")
 def HandleGenres():
     oc = ObjectContainer(title1=unicode(L("Genres")))
 
@@ -158,7 +156,7 @@ def HandleGenres():
 
     return oc
 
-@route(constants.PREFIX + "/genre")
+@route(PREFIX + "/genre")
 def HandleGenre(name, id, page=1):
     oc = ObjectContainer(title1=unicode(name))
 
@@ -179,7 +177,7 @@ def HandleGenre(name, id, page=1):
 
     return oc
 
-@route(constants.PREFIX + "/movie")
+@route(PREFIX + "/movie")
 def HandleMovie(name, id, thumb=None, operation=None, container=False):
     oc = ObjectContainer(title1=unicode(name))
 
@@ -231,7 +229,7 @@ def HandleMovie(name, id, thumb=None, operation=None, container=False):
 
     return oc
 
-@route(constants.PREFIX + '/search')
+@route(PREFIX + '/search')
 def HandleSearch(query=None, page=1):
     oc = ObjectContainer(title2=unicode(L('Search')))
 
@@ -260,7 +258,7 @@ def HandleSearch(query=None, page=1):
 
     return oc
 
-@route(constants.PREFIX + '/movie_or_serie')
+@route(PREFIX + '/movie_or_serie')
 def HandleMovieOrSerie(**params):
     serie_info = service.get_serie_info(params['id'])
 
@@ -271,7 +269,7 @@ def HandleMovieOrSerie(**params):
 
     return HandleContainer(**params)
 
-@route(constants.PREFIX + '/container')
+@route(PREFIX + '/container')
 def HandleContainer(**params):
     type = params['type']
 
@@ -284,8 +282,7 @@ def HandleContainer(**params):
     elif type == 'serie':
         return HandleSerie(**params)
 
-
-@route(constants.PREFIX + '/queue')
+@route(PREFIX + '/queue')
 def HandleQueue():
     oc = ObjectContainer(title2=unicode(L('Queue')))
 
@@ -299,13 +296,13 @@ def HandleQueue():
 
     return oc
 
-@route(constants.PREFIX + '/clear_queue')
+@route(PREFIX + '/clear_queue')
 def ClearQueue():
     service.queue.clear()
 
     return HandleQueue()
 
-@route(constants.PREFIX + '/history')
+@route(PREFIX + '/history')
 def HandleHistory():
     history_object = history.load_history(Data)
 

@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+
+ART = 'art-default.jpg'
+ICON = 'icon-default.png'
+
+PREFIX = '/video/daytse'
+
 import library_bridge
 
 library_bridge.bridge.export_object('L', L)
@@ -26,18 +32,11 @@ library_bridge.bridge.export_object('MessageContainer', MessageContainer)
 
 import plex_util
 
-import constants
 from daytse_service import DaytseService
 
 service = DaytseService()
 
 import main
-
-ART = 'art-default.jpg'
-ICON = 'icon-default.png'
-
-BASE_URL = "http://dayt.se/"
-NEXT_ICON = 'icon-next.png'
 
 def Start():
     Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
@@ -53,7 +52,7 @@ def Start():
 
     plex_util.validate_prefs()
 
-@handler(constants.PREFIX, 'Daytse', R(ART), R(ICON))
+@handler(PREFIX, 'Daytse', R(ART), R(ICON))
 def MainMenu():
     if not service.available():
         return MessageContainer(L('Error'), L('Service not avaliable'))
