@@ -33,10 +33,10 @@ class MyHitServiceTest(unittest.TestCase):
 
         print(json.dumps(result, indent=4))
 
-    def test_get_previous_seasons(self):
+    def test_get_seasons(self):
         id = '/tvseries/goto-9750'
 
-        result = self.service.get_previous_seasons(id)
+        result = self.service.get_seasons(id)
 
         print(json.dumps(result, indent=4))
 

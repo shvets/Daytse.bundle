@@ -57,7 +57,7 @@ class DaytseService(HttpService):
 
         return result
 
-    def get_genre(self, path, page=1):
+    def get_genre(self, path):
         result = []
 
         document = self.fetch_document(self.URL + path, self.get_headers())
@@ -88,6 +88,23 @@ class DaytseService(HttpService):
 
         return result
 
+    def get_seasons(self, path):
+        result = self.get_previous_seasons(path)
+
+        current_season = self.get_season(path)
+
+        first_item_name = current_season[0]['name']
+        index1 = first_item_name.find('Season')
+        index2 = first_item_name.find('Episode')
+
+        number = first_item_name[index1+6:index2].strip()
+
+        print(current_season)
+
+        result.append({'path': path, 'name': "Season " + number})
+
+        return result
+
     def get_season(self, path):
         result = []
 
@@ -103,6 +120,22 @@ class DaytseService(HttpService):
                 result.append({'path': path, 'name': self.extract_name(name)})
 
         return result
+
+    # def get_current_season(self, path):
+    #     result = []
+    #
+    #     document = self.fetch_document(self.URL + path, self.get_headers())
+    #
+    #     items = document.xpath('//div[@class="inner"]/h3/a')
+    #
+    #     for item in items:
+    #         path = "/forum/" + item.xpath("./@href")[0]
+    #         name = item.xpath("./text()")[0]
+    #
+    #         if name.find("Season Download") < 1:
+    #             result.append({'path': path, 'name': self.extract_name(name)})
+    #
+    #     return result
 
     def get_previous_seasons(self, path):
         result = []
@@ -163,9 +196,12 @@ class DaytseService(HttpService):
             if len(node2) > 0:
                 second_frame_url_part2 = node2[0] + "2.php"
 
-                second_frame_data_part2 = self.fetch_document(second_frame_url_part2, self.get_headers())
+                try:
+                    second_frame_data_part2 = self.fetch_document(second_frame_url_part2, self.get_headers())
 
-                result['urls'].append(second_frame_data_part2.xpath("//iframe/@src")[0])
+                    result['urls'].append(second_frame_data_part2.xpath("//iframe/@src")[0])
+                except:
+                    pass
 
                 try:
                     second_frame_url_part3 = node2[0] + "3.php"
@@ -243,6 +279,14 @@ class DaytseService(HttpService):
 
     def extract_name(self, name):
         return name.rsplit(" Streaming", 1)[0].rsplit(" Download", 1)[0]
+
+    def simplify_name(self, name):
+        index = name.find('Episode')
+
+        if index >= 0:
+            return name[index:]
+        else:
+            return name
 
     @staticmethod
     def get_headers():

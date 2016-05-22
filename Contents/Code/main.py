@@ -72,42 +72,31 @@ def HandleSeries(page=1):
 def HandleSerie(**params):
     oc = ObjectContainer(title1=unicode(params['serieName']))
 
-    response = service.get_previous_seasons(params['id'])
+    response = service.get_seasons(params['id'])
 
     for item in response:
-        season_id = item['path']
         name = item['name']
+        season_id = item['path']
 
         oc.add(DirectoryObject(
-            key=Callback(HandleSeason, serieName=params['serieName'], id=season_id),
-            title=name
-        ))
-
-    response = service.get_season(params['id'])
-
-    for item in response:
-        season_id = item['path']
-        name = item['name']
-
-        oc.add(DirectoryObject(
-            key=Callback(HandleEpisode, name=name, id=season_id),
+            key=Callback(HandleSeason, name=name, id=season_id),
             title=name
         ))
 
     return oc
 
 @route(PREFIX + "/season")
-def HandleSeason(serieName, id):
-    oc = ObjectContainer(title1=unicode(serieName))
+def HandleSeason(name, id):
+    oc = ObjectContainer(title1=unicode(name))
 
     response = service.get_season(id)
 
     for item in response:
-        id = item['path']
-        name = item['name']
+        season_id = item['path']
+        name = service.simplify_name(item['name'])
 
         oc.add(DirectoryObject(
-            key=Callback(HandleEpisode, name=name, id=id),
+            key=Callback(HandleEpisode, name=name, id=season_id),
             title=name
         ))
 
