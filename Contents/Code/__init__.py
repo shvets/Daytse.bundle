@@ -32,9 +32,9 @@ library_bridge.bridge.export_object('MessageContainer', MessageContainer)
 
 import plex_util
 
-from daytse_service import DaytseService
+from daytse_plex_service import DaytsePlexService
 
-service = DaytseService()
+service = DaytsePlexService()
 
 import main
 

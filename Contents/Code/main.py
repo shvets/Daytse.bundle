@@ -3,12 +3,7 @@
 import plex_util
 import pagination
 import history
-from flow_builder import FlowBuilder
-from daytse_plex_service import DaytsePlexService
-
-service = DaytsePlexService()
-
-builder = FlowBuilder()
+from media_info import MediaInfo
 
 @route(PREFIX + "/movies")
 def HandleMovies(page=1):
@@ -74,21 +69,21 @@ def HandleSeries(page=1):
     return oc
 
 @route(PREFIX + "/serie")
-def HandleSerie(serieName, id):
-    oc = ObjectContainer(title1=unicode(serieName))
+def HandleSerie(**params):
+    oc = ObjectContainer(title1=unicode(params['serieName']))
 
-    response = service.get_previous_seasons(id)
+    response = service.get_previous_seasons(params['id'])
 
     for item in response:
         season_id = item['path']
         name = item['name']
 
         oc.add(DirectoryObject(
-            key=Callback(HandleSeason, serieName=serieName, id=season_id),
+            key=Callback(HandleSeason, serieName=params['serieName'], id=season_id),
             title=name
         ))
 
-    response = service.get_season(id)
+    response = service.get_season(params['id'])
 
     for item in response:
         season_id = item['path']
@@ -100,21 +95,6 @@ def HandleSerie(serieName, id):
         ))
 
     return oc
-
-    # url = service.URL + id
-    #
-    # page_data = HTML.ElementFromURL(url)
-    # eps_list = page_data.xpath("//div[@class='inner']/h3/a")
-    # season_list = page_data.xpath("//div[@class='titleline']/h2/a")
-    # if len(season_list) >= 1:
-    #     for each in season_list:
-    #         season_url = "/forum/" + each.xpath("./@href")[0]
-    #         season_title = serieName + " " + each.xpath("./text()")[0]
-    #
-    #         oc.add(DirectoryObject(
-    #             key = Callback(HandleSerie, serieName = season_title, id = season_url),
-    #             title = season_title
-    #         ))
 
 @route(PREFIX + "/season")
 def HandleSeason(serieName, id):
@@ -178,56 +158,68 @@ def HandleGenre(name, id, page=1):
     return oc
 
 @route(PREFIX + "/movie")
-def HandleMovie(name, id, thumb=None, operation=None, container=False):
-    oc = ObjectContainer(title1=unicode(name))
+def HandleMovie(operation=None, container=False, **params):
+    oc = ObjectContainer(title1=unicode(params['name']))
 
-    response = service.get_movie(id)
+    media_info = MediaInfo(**params)
+
+    service.queue.handle_bookmark_operation(operation, media_info)
+
+    response = service.get_movie(params['id'])
 
     if response['thumb']:
         thumb = response['thumb']
+    else:
+        thumb = params['thumb']
 
-    final_frame_url = response['final_frame_url']
+    name = response['name']
 
-    if final_frame_url:
-        oc.add(VideoClipObject(
-            url = final_frame_url,
-            thumb = plex_util.get_thumb(thumb),
-            title = unicode(response['name'])
-        ))
+    urls = response['urls']
 
-    final_frame_url_part2 = response['final_frame_url_part2']
+    urls_length = len(urls)
 
-    if final_frame_url_part2:
-        oc.add(VideoClipObject(
-            url=final_frame_url_part2,
-            thumb=plex_util.get_thumb(thumb),
-            title=unicode("2-"+response['name'])
-        ))
+    for index, url in enumerate(urls):
+        if urls_length > 1:
+            url_name = str(index+1) + "-" + name
+        else:
+            url_name = name
 
-    final_frame_url_part3 = response['final_frame_url_part3']
+        oc.add(MetadataObjectForURL(url=url, thumb=thumb, title=url_name))
 
-    if final_frame_url_part3:
-        oc.add(VideoClipObject(
-            url=final_frame_url_part3,
-            thumb=plex_util.get_thumb(thumb),
-            title=unicode("3-"+response['name'])
-        ))
-
-    trailer_url = response['trailer_url']
-
-    if trailer_url:
-        oc.add(VideoClipObject(
-            url=trailer_url,
-            thumb=plex_util.get_thumb(thumb),
-            title=unicode(L("Watch Trailer"))
-        ))
+    if 'trailer_url' in response:
+        oc.add(MetadataObjectForURL(url=response['trailer_url'], thumb=thumb, title="Watch Trailer"))
 
     if str(container) == 'False':
-        pass
-        # history.push_to_history(Data, media_info)
-        # service.queue.append_bookmark_controls(oc, HandleMovie, media_info)
+        history.push_to_history(Data, media_info)
+        service.queue.append_bookmark_controls(oc, HandleMovie, media_info)
 
     return oc
+
+def MetadataObjectForURL(url, thumb, title):
+    metadata_object = VideoClipObject(
+        url=url,
+        thumb=plex_util.get_thumb(thumb),
+        title=unicode(L(title))
+    )
+
+    # metadata_object = builder.build_metadata_object(media_type=media_info['type'], title=media_info['name'])
+    #
+    # metadata_object.key = Callback(HandleMovie, container=True, **media_info)
+    #
+    # # metadata_object.rating_key = 'rating_key'
+    # metadata_object.rating_key = unicode(media_info['name'])
+    # # metadata_object.rating = data['rating']
+    # metadata_object.thumb = media_info['thumb']
+    # # metadata_object.url = urls['m3u8'][0]
+    # # metadata_object.art = data['thumb']
+    # # metadata_object.tags = data['tags']
+    # # metadata_object.duration = data['duration'] * 1000
+    # # metadata_object.summary = data['summary']
+    # # metadata_object.directors = data['directors']
+    #
+    # metadata_object.items.extend(MediaObjectsForURL(url_items, player=player))
+
+    return metadata_object
 
 @route(PREFIX + '/search')
 def HandleSearch(query=None, page=1):
@@ -235,23 +227,14 @@ def HandleSearch(query=None, page=1):
 
     response = service.search(query=query)
 
-    for movie in response:
-        name = movie['name']
-        id = movie['path']
-        # thumb = movie['thumb']
+    for item in response:
+        name = item['name']
+        id = item['path']
+        isSerie = item['isSerie']
 
-        Log(name)
-        new_params = {
-            'id': movie['path'],
-            # 'title': name,
-            'name': name,
-            # 'thumb': thumb
-        }
         oc.add(DirectoryObject(
-            #key=Callback(HandleMovieOrSerie, **new_params),
-            key=Callback(HandleMovie, **new_params),
+            key=Callback(HandleMovieOrSerie, id=id, name=name, isSerie=isSerie),
             title=unicode(name)
-            # thumb=thumb
         ))
 
     pagination.append_controls(oc, response, callback=HandleSearch, query=query, page=page)
@@ -260,10 +243,9 @@ def HandleSearch(query=None, page=1):
 
 @route(PREFIX + '/movie_or_serie')
 def HandleMovieOrSerie(**params):
-    serie_info = service.get_serie_info(params['id'])
-
-    if serie_info:
+    if params['isSerie'] == True:
         params['type'] = 'serie'
+        params['serieName'] = params['name']
     else:
         params['type'] = 'movie'
 
@@ -271,6 +253,7 @@ def HandleMovieOrSerie(**params):
 
 @route(PREFIX + '/container')
 def HandleContainer(**params):
+    Log(params)
     type = params['type']
 
     if type == 'movie':
