@@ -12,14 +12,10 @@ def HandleMovies(page=1):
     response = service.get_movies(page=page)
 
     for item in response['movies']:
-        id = item['path']
-        name = item['name']
-        thumb = item['thumb']
-
         oc.add(DirectoryObject(
-            key=Callback(HandleMovie, name=name, id=id, thumb=thumb),
-            title=name,
-            thumb=plex_util.get_thumb(thumb)
+            key=Callback(HandleMovie, name=item['name'], id=item['path'], thumb=item['thumb']),
+            title=item['name'],
+            thumb=plex_util.get_thumb(item['thumb'])
         ))
 
     pagination.append_controls(oc, response, callback=HandleMovies, page=page)
@@ -33,14 +29,10 @@ def HandleLatestEpisodes(page=1):
     response = service.get_latest_episodes(page=page)
 
     for item in response['movies']:
-        id = item['path']
-        name = item['name']
-        thumb = item['thumb']
-
         oc.add(DirectoryObject(
-            key=Callback(HandleEpisode, name=name, id=id, thumb=thumb),
-            title=name,
-            thumb=plex_util.get_thumb(thumb)
+            key=Callback(HandleEpisode, name=item['name'], id=item['path'], thumb=item['thumb']),
+            title=item['name'],
+            thumb=plex_util.get_thumb(item['thumb'])
         ))
 
     pagination.append_controls(oc, response, callback=HandleLatestEpisodes, page=page)
@@ -54,14 +46,10 @@ def HandleSeries(page=1):
     response = service.get_series(page=page)
 
     for item in response['movies']:
-        path = item['path']
-        name = item['name']
-        thumb = item['thumb']
-
         oc.add(DirectoryObject(
-            key=Callback(HandleSerie, serieName=name, id=path),
-            title=name,
-            thumb=plex_util.get_thumb(thumb)
+            key=Callback(HandleSerie, serieName=item['name'], id=item['path'], thumb=item['thumb']),
+            title=item['name'],
+            thumb=plex_util.get_thumb(item['thumb'])
         ))
 
     pagination.append_controls(oc, response, callback=HandleSeries, page=page)
@@ -75,12 +63,10 @@ def HandleSerie(**params):
     response = service.get_seasons(params['id'])
 
     for item in response:
-        name = item['name']
-        season_id = item['path']
-
         oc.add(DirectoryObject(
-            key=Callback(HandleSeason, name=name, id=season_id),
-            title=name
+            key=Callback(HandleSeason, name=item['name'], id=item['path']),
+            title=item['name'],
+            thumb=params['thumb']
         ))
 
     return oc
@@ -92,12 +78,11 @@ def HandleSeason(name, id):
     response = service.get_season(id)
 
     for item in response:
-        season_id = item['path']
-        name = service.simplify_name(item['name'])
+        season_name = service.simplify_name(item['name'])
 
         oc.add(DirectoryObject(
-            key=Callback(HandleEpisode, name=name, id=season_id),
-            title=name
+            key=Callback(HandleEpisode, name=season_name, id=item['path']),
+            title=season_name
         ))
 
     return oc
@@ -113,14 +98,10 @@ def HandleGenres():
     response = service.get_genres()
 
     for item in response:
-        id = item['path']
-        name = item['name']
-        thumb = item['thumb']
-
         oc.add(DirectoryObject(
-            key=Callback(HandleGenre, name=name, id=id),
-            title=name,
-            thumb=plex_util.get_thumb(thumb)
+            key=Callback(HandleGenre, name=item['name'], id=item['path']),
+            title=item['name'],
+            thumb=plex_util.get_thumb(item['thumb'])
         ))
 
     return oc
@@ -129,17 +110,13 @@ def HandleGenres():
 def HandleGenre(name, id, page=1):
     oc = ObjectContainer(title1=unicode(name))
 
-    response = service.get_genre(id)
+    response = service.get_genre(id, page=page)
 
-    for item in response:
-        id = item['path']
-        name = item['name']
-        thumb = item['thumb']
-
+    for item in response['movies']:
         oc.add(DirectoryObject(
-            key=Callback(HandleMovie, name=name, id=id, thumb=thumb),
-            title=name,
-            thumb=plex_util.get_thumb(thumb)
+            key=Callback(HandleMovie, name=item['name'], id=item['path'], thumb=item['thumb']),
+            title=item['name'],
+            thumb=plex_util.get_thumb(item['thumb'])
         ))
 
     pagination.append_controls(oc, response, callback=HandleGenre, name=name, id=id, page=page)
@@ -191,23 +168,6 @@ def MetadataObjectForURL(url, thumb, title):
         title=unicode(L(title))
     )
 
-    # metadata_object = builder.build_metadata_object(media_type=media_info['type'], title=media_info['name'])
-    #
-    # metadata_object.key = Callback(HandleMovie, container=True, **media_info)
-    #
-    # # metadata_object.rating_key = 'rating_key'
-    # metadata_object.rating_key = unicode(media_info['name'])
-    # # metadata_object.rating = data['rating']
-    # metadata_object.thumb = media_info['thumb']
-    # # metadata_object.url = urls['m3u8'][0]
-    # # metadata_object.art = data['thumb']
-    # # metadata_object.tags = data['tags']
-    # # metadata_object.duration = data['duration'] * 1000
-    # # metadata_object.summary = data['summary']
-    # # metadata_object.directors = data['directors']
-    #
-    # metadata_object.items.extend(MediaObjectsForURL(url_items, player=player))
-
     return metadata_object
 
 @route(PREFIX + '/search')
@@ -217,13 +177,9 @@ def HandleSearch(query=None, page=1):
     response = service.search(query=query)
 
     for item in response:
-        name = item['name']
-        id = item['path']
-        isSerie = item['isSerie']
-
         oc.add(DirectoryObject(
-            key=Callback(HandleMovieOrSerie, id=id, name=name, isSerie=isSerie),
-            title=unicode(name)
+            key=Callback(HandleMovieOrSerie, id=tem['path'], name=item['name'], isSerie=item['isSerie']),
+            title=unicode(item['name'])
         ))
 
     pagination.append_controls(oc, response, callback=HandleSearch, query=query, page=page)

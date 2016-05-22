@@ -57,10 +57,16 @@ class DaytseService(HttpService):
 
         return result
 
-    def get_genre(self, path):
+    def get_genre(self, path, page=1):
         result = []
 
-        document = self.fetch_document(self.URL + path, self.get_headers())
+        new_url = self.http_request(self.URL + path, headers=self.get_headers()).url
+
+        new_path = new_url[len(self.URL):]
+
+        page_path = new_path + "&page=" + str(page)
+
+        document = self.fetch_document(self.URL + page_path, self.get_headers())
 
         items = document.xpath('//td[@class="topic_content"]')
 
@@ -71,7 +77,9 @@ class DaytseService(HttpService):
 
             result.append({'path': path, 'thumb': thumb, 'name': name})
 
-        return result
+        pagination = self.extract_pagination_data(page_path, page=page)
+
+        return {'movies': result, "pagination": pagination["pagination"]}
 
     def get_serie(self, path):
         result = []
@@ -120,22 +128,6 @@ class DaytseService(HttpService):
                 result.append({'path': path, 'name': self.extract_name(name)})
 
         return result
-
-    # def get_current_season(self, path):
-    #     result = []
-    #
-    #     document = self.fetch_document(self.URL + path, self.get_headers())
-    #
-    #     items = document.xpath('//div[@class="inner"]/h3/a')
-    #
-    #     for item in items:
-    #         path = "/forum/" + item.xpath("./@href")[0]
-    #         name = item.xpath("./text()")[0]
-    #
-    #         if name.find("Season Download") < 1:
-    #             result.append({'path': path, 'name': self.extract_name(name)})
-    #
-    #     return result
 
     def get_previous_seasons(self, path):
         result = []
