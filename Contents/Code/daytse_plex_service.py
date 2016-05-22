@@ -8,4 +8,6 @@ class DaytsePlexService(DaytseService):
         self.queue = PlexStorage(storage_name)
 
         self.queue.register_simple_type('movie')
+        self.queue.register_simple_type('episode')
+        self.queue.register_simple_type('season')
         self.queue.register_simple_type('serie')

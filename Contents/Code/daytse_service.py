@@ -226,19 +226,21 @@ class DaytseService(HttpService):
         items = document.xpath('//div[@class="blockbody"]/*/li')
 
         for item in items:
-            statusNode = item.find('div/div/a[@class="threadstatus"]')
-
-            if statusNode != None:
-                isSerie = True
-            else:
-                isSerie = False
-
             node = item.find('div/div/div/h3[@class="searchtitle"]/a')
 
             path = "/forum/" + node.xpath("./@href")[0]
             name = node.xpath("./text()")[0]
 
-            result.append({'path': path, 'name': self.extract_name(name), 'isSerie': isSerie})
+            statusNode = item.find('div/div/a[@class="threadstatus"]')
+
+            if statusNode != None:
+                type = 'serie'
+            elif name.find("Episode") >=0:
+                type = 'episode'
+            else:
+                type = 'movie'
+
+            result.append({'path': path, 'name': self.extract_name(name), 'type': type})
 
         return result
 

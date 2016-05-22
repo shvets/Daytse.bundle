@@ -83,7 +83,7 @@ class MyHitServiceTest(unittest.TestCase):
         self.assertEqual(pagination['page'], 2)
 
     def test_search(self):
-        query = 'red'
+        query = 'da vinci'
 
         result = self.service.search(query)
 

@@ -46,8 +46,15 @@ def HandleSeries(page=1):
     response = service.get_series(page=page)
 
     for item in response['movies']:
+        new_params = {
+            'type': 'serie',
+            'name': item['name'],
+            'id': item['path'],
+            'thumb': item['thumb']
+        }
+
         oc.add(DirectoryObject(
-            key=Callback(HandleSerie, serieName=item['name'], id=item['path'], thumb=item['thumb']),
+            key=Callback(HandleSerie, **new_params),
             title=item['name'],
             thumb=plex_util.get_thumb(item['thumb'])
         ))
@@ -57,33 +64,69 @@ def HandleSeries(page=1):
     return oc
 
 @route(PREFIX + "/serie")
-def HandleSerie(**params):
-    oc = ObjectContainer(title1=unicode(params['serieName']))
+def HandleSerie(operation=None, **params):
+    oc = ObjectContainer(title1=unicode(params['name']))
+
+    media_info = MediaInfo(**params)
+
+    service.queue.handle_bookmark_operation(operation, media_info)
 
     response = service.get_seasons(params['id'])
 
     for item in response:
+        season_number = item['name'][len("Season"):].strip()
+
+        new_params = {
+            'type': 'season',
+            'id': item['path'],
+            'serieName': params['name'],
+            'name': item['name'],
+            'thumb': params['thumb'],
+            'season': season_number,
+        }
+
         oc.add(DirectoryObject(
-            key=Callback(HandleSeason, name=item['name'], id=item['path']),
+            key=Callback(HandleSeason, **new_params),
             title=item['name'],
             thumb=params['thumb']
         ))
 
+    service.queue.append_bookmark_controls(oc, HandleSerie, media_info)
+
     return oc
 
 @route(PREFIX + "/season")
-def HandleSeason(name, id):
-    oc = ObjectContainer(title1=unicode(name))
+def HandleSeason(operation=None, container=False, **params):
+    oc = ObjectContainer(title1=unicode(params['name']))
 
-    response = service.get_season(id)
+    media_info = MediaInfo(**params)
+
+    service.queue.handle_bookmark_operation(operation, media_info)
+
+    response = service.get_season(params['id'])
 
     for item in response:
-        season_name = service.simplify_name(item['name'])
+        episode_name = service.simplify_name(item['name'])
+        episode_number = episode_name[len("Episode"):].strip()
+
+        new_params = {
+            'type': 'episode',
+            'id': item['path'],
+            'serieName': params['serieName'],
+            'name': episode_name,
+            'thumb': params['thumb'],
+            'season': params['season'],
+            'episodeNumber': episode_number
+        }
 
         oc.add(DirectoryObject(
-            key=Callback(HandleEpisode, name=season_name, id=item['path']),
-            title=season_name
+            key=Callback(HandleEpisode, **new_params),
+            title=episode_name
         ))
+
+    if str(container) == 'False':
+        history.push_to_history(Data, media_info)
+        service.queue.append_bookmark_controls(oc, HandleSeason, media_info)
 
     return oc
 
@@ -178,7 +221,7 @@ def HandleSearch(query=None, page=1):
 
     for item in response:
         oc.add(DirectoryObject(
-            key=Callback(HandleMovieOrSerie, id=tem['path'], name=item['name'], isSerie=item['isSerie']),
+            key=Callback(HandleContainer, id=item['path'], name=item['name'], type=item['type'], thumb='thumb'),
             title=unicode(item['name'])
         ))
 
@@ -186,19 +229,11 @@ def HandleSearch(query=None, page=1):
 
     return oc
 
-@route(PREFIX + '/movie_or_serie')
-def HandleMovieOrSerie(**params):
-    if params['isSerie'] == True:
-        params['type'] = 'serie'
-        params['serieName'] = params['name']
-    else:
-        params['type'] = 'movie'
-
-    return HandleContainer(**params)
-
 @route(PREFIX + '/container')
 def HandleContainer(**params):
-    Log(params)
+    if not 'thumb' in params:
+        params['thumb'] = None
+
     type = params['type']
 
     if type == 'movie':
