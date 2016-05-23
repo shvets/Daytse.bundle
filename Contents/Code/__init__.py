@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 ART = 'art-default.jpg'
 ICON = 'icon-default.png'
 
