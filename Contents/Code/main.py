@@ -22,22 +22,45 @@ def HandleMovies(page=1):
 
     return oc
 
-@route(PREFIX + "/latest_episodes")
-def HandleLatestEpisodes(page=1):
-    oc = ObjectContainer(title1=unicode(L("Latest Episodes")))
+@route(PREFIX + "/latest")
+def HandleLatest(page=1):
+    oc = ObjectContainer(title1=unicode(L("Latest")))
 
     response = service.get_latest_episodes(page=page)
 
     for item in response['movies']:
+        new_params = {
+            # "isSerie": True,
+            "name": item['name'],
+            "id": item['path'],
+            "thumb": item['thumb']
+        }
         oc.add(DirectoryObject(
-            key=Callback(HandleEpisode, name=item['name'], id=item['path'], thumb=item['thumb']),
+            key=Callback(HandleMovie, **new_params),
             title=item['name'],
             thumb=plex_util.get_thumb(item['thumb'])
         ))
 
-    pagination.append_controls(oc, response, callback=HandleLatestEpisodes, page=page)
+    pagination.append_controls(oc, response, callback=HandleLatest, page=page)
 
     return oc
+
+# @route(PREFIX + "/latest_episodes")
+# def HandleLatestEpisodes(page=1):
+#     oc = ObjectContainer(title1=unicode(L("Latest Episodes")))
+#
+#     response = service.get_latest_episodes(page=page)
+#
+#     for item in response['movies']:
+#         oc.add(DirectoryObject(
+#             key=Callback(HandleEpisode, name=item['name'], id=item['path'], thumb=item['thumb']),
+#             title=item['name'],
+#             thumb=plex_util.get_thumb(item['thumb'])
+#         ))
+#
+#     pagination.append_controls(oc, response, callback=HandleLatestEpisodes, page=page)
+#
+#     return oc
 
 @route(PREFIX + "/series")
 def HandleSeries(page=1):
@@ -204,6 +227,15 @@ def HandleMovie(operation=None, container=False, **params):
 
     return oc
 
+# @route(PREFIX + '/movie_or_serie')
+# def HandleMovieOrSerie(**params):
+#     if 'isSerie' in params and str(params['isSerie']) == 'True':
+#         params['type'] = 'serie'
+#     else:
+#         params['type'] = 'movie'
+#
+#     return HandleContainer(**params)
+
 def MetadataObjectForURL(url, thumb, title):
     metadata_object = VideoClipObject(
         url=url,
@@ -213,21 +245,21 @@ def MetadataObjectForURL(url, thumb, title):
 
     return metadata_object
 
-@route(PREFIX + '/search')
-def HandleSearch(query=None, page=1):
-    oc = ObjectContainer(title2=unicode(L('Search')))
-
-    response = service.search(query=query)
-
-    for item in response:
-        oc.add(DirectoryObject(
-            key=Callback(HandleContainer, id=item['path'], name=item['name'], type=item['type'], thumb='thumb'),
-            title=unicode(item['name'])
-        ))
-
-    pagination.append_controls(oc, response, callback=HandleSearch, query=query, page=page)
-
-    return oc
+# @route(PREFIX + '/search')
+# def HandleSearch(query=None, page=1):
+#     oc = ObjectContainer(title2=unicode(L('Search')))
+#
+#     response = service.search(query=query)
+#
+#     for item in response:
+#         oc.add(DirectoryObject(
+#             key=Callback(HandleContainer, id=item['path'], name=item['name'], type=item['type'], thumb='thumb'),
+#             title=unicode(item['name'])
+#         ))
+#
+#     pagination.append_controls(oc, response, callback=HandleSearch, query=query, page=page)
+#
+#     return oc
 
 @route(PREFIX + '/container')
 def HandleContainer(**params):

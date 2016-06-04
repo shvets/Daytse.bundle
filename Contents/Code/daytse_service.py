@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import re
+import library_bridge
+
+# Log = library_bridge.bridge.objects['Log']
 
 from http_service import HttpService
 
@@ -33,7 +35,7 @@ class DaytseService(HttpService):
         for item in items:
             path = '/' + category + '/' + item.xpath("./div/a/@href")[0]
             name = item.xpath("./div/a/img/@alt")[0]
-            thumb = item.xpath("./div/a/img/@src")[0]
+            thumb = self.URL + item.xpath("./div/a/img/@src")[0]
 
             result.append({'path': path, 'thumb': thumb, 'name': name})
 
@@ -50,7 +52,8 @@ class DaytseService(HttpService):
 
         for item in items:
             path = "/movies/" + item.xpath("./div/a/@href")[0]
-            thumb = item.xpath("./div/a/img/@src")[0]
+            path = path[0:len(path)-1]
+            thumb = self.URL + item.xpath("./div/a/img/@src")[0]
             name = thumb.rsplit("/", 1)[1].rsplit("-", 1)[0]
 
             result.append({'path': path, 'thumb': thumb, 'name': name})
@@ -60,7 +63,7 @@ class DaytseService(HttpService):
     def get_genre(self, path, page=1):
         result = []
 
-        new_url = self.http_request(self.URL + path, headers=self.get_headers()).url
+        new_url = self.http_request(self.URL + self.get_corrected_path(path), headers=self.get_headers()).url
 
         new_path = new_url[len(self.URL):]
 
@@ -73,7 +76,7 @@ class DaytseService(HttpService):
         for item in items:
             path = "/movies/" + item.xpath("./div/a/@href")[0]
             name = item.xpath("./div/a/img/@alt")[0]
-            thumb = item.xpath("./div/a/img/@src")[0]
+            thumb = self.URL + item.xpath("./div/a/img/@src")[0]
 
             result.append({'path': path, 'thumb': thumb, 'name': name})
 
@@ -107,8 +110,6 @@ class DaytseService(HttpService):
 
         number = first_item_name[index1+6:index2].strip()
 
-        print(current_season)
-
         result.append({'path': path, 'name': "Season " + number})
 
         return result
@@ -116,7 +117,7 @@ class DaytseService(HttpService):
     def get_season(self, path):
         result = []
 
-        document = self.fetch_document(self.URL + path, self.get_headers())
+        document = self.fetch_document(self.URL + self.get_corrected_path(path), self.get_headers())
 
         items = document.xpath('//div[@class="inner"]/h3/a')
 
@@ -153,19 +154,21 @@ class DaytseService(HttpService):
 
         result['name'] = self.extract_name(document.xpath("//title/text()")[0])
 
-        node = document.xpath("//blockquote[@class='postcontent restore']//div/img/@src")
+        # node = document.xpath("//blockquote[@class='postcontent restore']//div/img/@src")
+        #
+        # if len(node) == 0:
+        #     node = document.xpath("//div[@id='fullimage']//a/img/@src")
+        #
+        # if len(node) > 0:
+        #     result['thumb'] = node[0]
 
-        if len(node) == 0:
-            node = document.xpath("//div[@id='fullimage']//a/img/@src")[0]
-
-        if len(node) > 0:
-            result['thumb'] = node[0]
+        result['thumb'] = self.URL + document.xpath('//img[@id="nameimage"]')[0].get('src')
 
         # load recursive iframes to find google docs url
 
         result['urls'] = []
 
-        node1 = document.xpath("//blockquote/div/iframe/@src")
+        node1 = document.xpath("//iframe/@src")
 
         if len(node1) > 1:
             first_frame_url = node1[1]
@@ -175,11 +178,11 @@ class DaytseService(HttpService):
             first_frame_url = None
 
         if first_frame_url:
-            first_frame_data = self.fetch_document(first_frame_url, self.get_headers())
+            first_frame_data = self.fetch_document(self.URL + first_frame_url, self.get_headers())
 
             second_frame_url = first_frame_data.xpath("//iframe/@src")[0]
 
-            second_frame_data = self.fetch_document(second_frame_url, self.get_headers())
+            second_frame_data = self.fetch_document(self.URL + second_frame_url, self.get_headers())
 
             result['urls'].append(second_frame_data.xpath("//iframe/@src")[0])
 
@@ -189,7 +192,7 @@ class DaytseService(HttpService):
                 second_frame_url_part2 = node2[0] + "2.php"
 
                 try:
-                    second_frame_data_part2 = self.fetch_document(second_frame_url_part2, self.get_headers())
+                    second_frame_data_part2 = self.fetch_document(self.URL + second_frame_url_part2, self.get_headers())
 
                     result['urls'].append(second_frame_data_part2.xpath("//iframe/@src")[0])
                 except:
@@ -198,7 +201,7 @@ class DaytseService(HttpService):
                 try:
                     second_frame_url_part3 = node2[0] + "3.php"
 
-                    second_frame_data_part3 = self.fetch_document(second_frame_url_part3, self.get_headers())
+                    second_frame_data_part3 = self.fetch_document(self.URL + second_frame_url_part3, self.get_headers())
 
                     node3 = second_frame_data_part3.xpath("//iframe/@src")
 
@@ -208,41 +211,44 @@ class DaytseService(HttpService):
                     pass
 
         if len(document.xpath("//iframe[contains(@src,'ytid=')]/@src")) > 0:
-            el = document.xpath("//iframe[contains(@src,'ytid=')]/@src")[0]
+            el = self.URL + document.xpath("//iframe[contains(@src,'ytid=')]/@src")[0]
 
-            result['trailer_url'] = el.split("?",1)[0].replace("http://dayt.se/pastube.php", "https://www.youtube.com/watch?v=") + el.split("=",1)[1]
+            Log(el.split("?",1)[0])
+            Log(el.split("?",1)[0].replace("http://dayt.se/bits/pastube.php", "https://www.youtube.com/watch?v="))
 
-        return result
-
-    def search(self, query):
-        result = []
-
-        data = {'titleonly': '1', 'q': query}
-        response = self.http_request(self.URL + "/forum/search.php?do=process", method="POST", data=data, headers=self.get_headers())
-        content = response.read()
-
-        document = self.to_document(content)
-
-        items = document.xpath('//div[@class="blockbody"]/*/li')
-
-        for item in items:
-            node = item.find('div/div/div/h3[@class="searchtitle"]/a')
-
-            path = "/forum/" + node.xpath("./@href")[0]
-            name = node.xpath("./text()")[0]
-
-            statusNode = item.find('div/div/a[@class="threadstatus"]')
-
-            if statusNode != None:
-                type = 'serie'
-            elif name.find("Episode") >=0:
-                type = 'episode'
-            else:
-                type = 'movie'
-
-            result.append({'path': path, 'name': self.extract_name(name), 'type': type})
+            result['trailer_url'] = el.split("?",1)[0].replace("http://dayt.se/bits/pastube.php", "https://www.youtube.com/watch?v=") + el.split("=",1)[1]
 
         return result
+
+    # def search(self, query):
+    #     result = []
+    #
+    #     data = {'titleonly': '1', 'q': query}
+    #     response = self.http_request(self.URL + "/forum/search.php?do=process", method="POST", data=data, headers=self.get_headers())
+    #     content = response.read()
+    #
+    #     document = self.to_document(content)
+    #
+    #     items = document.xpath('//div[@class="blockbody"]/*/li')
+    #
+    #     for item in items:
+    #         node = item.find('div/div/div/h3[@class="searchtitle"]/a')
+    #
+    #         path = "/forum/" + node.xpath("./@href")[0]
+    #         name = node.xpath("./text()")[0]
+    #
+    #         statusNode = item.find('div/div/a[@class="threadstatus"]')
+    #
+    #         if statusNode != None:
+    #             type = 'serie'
+    #         elif name.find("Episode") >=0:
+    #             type = 'episode'
+    #         else:
+    #             type = 'movie'
+    #
+    #         result.append({'path': path, 'name': self.extract_name(name), 'type': type})
+    #
+    #     return result
 
     def extract_pagination_data(self, path, page):
         page = int(page)
@@ -281,6 +287,18 @@ class DaytseService(HttpService):
             return name[index:]
         else:
             return name
+
+    @staticmethod
+    def get_media_id(path):
+        index = path.find('/goto-')
+
+        return path[index + 6:]
+
+    @staticmethod
+    def get_corrected_path(path):
+        id = DaytseService.get_media_id(path)
+
+        return path.replace('goto-' + id, 'view.php?id=' + id)
 
     @staticmethod
     def get_headers():

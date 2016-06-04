@@ -26,19 +26,19 @@ class MyHitServiceTest(unittest.TestCase):
 
         print(json.dumps(result, indent=4))
 
-    def test_get_season(self):
-        id = '/tvseries/goto-9750'
+    # def test_get_season(self):
+    #     id = '/tvseries/goto-9750'
+    #
+    #     result = self.service.get_season(id)
+    #
+    #     print(json.dumps(result, indent=4))
 
-        result = self.service.get_season(id)
-
-        print(json.dumps(result, indent=4))
-
-    def test_get_seasons(self):
-        id = '/tvseries/goto-9750'
-
-        result = self.service.get_seasons(id)
-
-        print(json.dumps(result, indent=4))
+    # def test_get_seasons(self):
+    #     id = '/tvseries/goto-9750'
+    #
+    #     result = self.service.get_seasons(id)
+    #
+    #     print(json.dumps(result, indent=4))
 
     def test_get_movie(self):
         id = '/movies/goto-22704'
@@ -82,12 +82,12 @@ class MyHitServiceTest(unittest.TestCase):
         self.assertEqual(pagination['has_previous'], True)
         self.assertEqual(pagination['page'], 2)
 
-    def test_search(self):
-        query = 'da vinci'
-
-        result = self.service.search(query)
-
-        print(json.dumps(result, indent=4))
+    # def test_search(self):
+    #     query = 'da vinci'
+    #
+    #     result = self.service.search(query)
+    #
+    #     print(json.dumps(result, indent=4))
 
 if __name__ == '__main__':
     unittest.main()

@@ -59,15 +59,16 @@ def MainMenu():
     oc = ObjectContainer(title2=unicode(L('Title')), no_cache=True)
 
     oc.add(DirectoryObject(key = Callback(main.HandleMovies), title = unicode(L("Movies"))))
-    oc.add(DirectoryObject(key = Callback(main.HandleLatestEpisodes), title = unicode(L("Latest Episodes"))))
-    oc.add(DirectoryObject(key = Callback(main.HandleSeries), title = unicode(L("Series"))))
+    oc.add(DirectoryObject(key = Callback(main.HandleLatest), title = unicode(L("Latest"))))
+    # oc.add(DirectoryObject(key = Callback(main.HandleLatestEpisodes), title = unicode(L("Latest Episodes"))))
+    # oc.add(DirectoryObject(key = Callback(main.HandleSeries), title = unicode(L("Series"))))
     oc.add(DirectoryObject(key = Callback(main.HandleGenres), title = unicode(L("Genres"))))
     oc.add(DirectoryObject(key=Callback(main.HandleHistory), title=unicode(L('History'))))
     oc.add(DirectoryObject(key=Callback(main.HandleQueue), title=unicode(L('Queue'))))
 
-    oc.add(InputDirectoryObject(
-        key=Callback(main.HandleSearch),
-        title=unicode(L('Search')), prompt=unicode(L('Search on Dayt.se'))
-    ))
+    # oc.add(InputDirectoryObject(
+    #     key=Callback(main.HandleSearch),
+    #     title=unicode(L('Search')), prompt=unicode(L('Search on Dayt.se'))
+    # ))
 
     return oc
