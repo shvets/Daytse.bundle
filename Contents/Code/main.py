@@ -3,7 +3,10 @@
 import plex_util
 import pagination
 import history
+# from flow_builder import FlowBuilder
 from media_info import MediaInfo
+
+# builder = FlowBuilder()
 
 @route(PREFIX + "/movies")
 def HandleMovies(page=1):
@@ -26,7 +29,7 @@ def HandleMovies(page=1):
 def HandleLatest(page=1):
     oc = ObjectContainer(title1=unicode(L("Latest")))
 
-    response = service.get_latest_episodes(page=page)
+    response = service.get_latest(page=page)
 
     for item in response['movies']:
         new_params = {
@@ -218,6 +221,20 @@ def HandleMovie(operation=None, container=False, **params):
 
         oc.add(MetadataObjectForURL(url=url, thumb=thumb, title=url_name))
 
+        # media_info['name'] = url_name
+        # media_info['thumb'] = thumb
+        #
+        # url_items = [{
+        #     "url": url,
+        #     "config": {
+        #         # "container": 'MP4',
+        #         # "audio_codec": 'AAC',
+        #         # "video_codec": 'H264',
+        #     }
+        # }]
+
+        #oc.add(MetadataObjectForURL2(media_info=media_info, url_items=url_items, handler=HandleMovie, player=PlayVideo))
+
     if 'trailer_url' in response:
         oc.add(MetadataObjectForURL(url=response['trailer_url'], thumb=thumb, title="Watch Trailer"))
 
@@ -244,6 +261,34 @@ def MetadataObjectForURL(url, thumb, title):
     )
 
     return metadata_object
+
+# def MetadataObjectForURL2(media_info, url_items, handler, player):
+#     metadata_object = builder.build_metadata_object(media_type=media_info['type'], title=media_info['name'])
+#
+#     metadata_object.key = Callback(handler, container=True, **media_info)
+#
+#     metadata_object.rating_key = unicode(media_info['name'])
+#     metadata_object.thumb = media_info['thumb']
+#     metadata_object.title = media_info['name']
+#
+#     metadata_object.items = MediaObjectsForURL(url_items, player=player)
+#
+#     return metadata_object
+#
+# def MediaObjectsForURL(url_items, player):
+#     media_objects = []
+#
+#     for item in url_items:
+#         url = item['url']
+#         config = item['config']
+#
+#         play_callback = Callback(player, url=url, play_list=False)
+#
+#         media_object = builder.build_media_object(play_callback, config)
+#
+#         media_objects.append(media_object)
+#
+#     return media_objects
 
 # @route(PREFIX + '/search')
 # def HandleSearch(query=None, page=1):
@@ -309,3 +354,23 @@ def HandleHistory():
         service.queue.handle_queue_items(oc, HandleContainer, data)
 
     return oc
+
+# # @indirect
+# @route(PREFIX + '/play_video')
+# def PlayVideo(url, play_list=True):
+#     return Redirect(url)
+#
+#     # Log(url)
+#     # if not url:
+#     #     return plex_util.no_contents()
+#     # else:
+#     #     if str(play_list) == 'True':
+#     #         url = Callback(PlayList, url=url)
+#     #
+#     #     return IndirectResponse(MovieObject, key=HTTPLiveStreamURL(url))
+#
+# # @route(PREFIX + '/play_list.m3u8')
+# # def PlayList(url):
+# #     play_list = service.get_play_list(url)
+# #
+# #     return play_list

@@ -16,6 +16,16 @@ class MyHitServiceTest(unittest.TestCase):
 
         print(json.dumps(result, indent=4))
 
+    # def test_get_latest_episodes(self):
+    #     result = self.service.get_latest_episodes()
+    #
+    #     print(json.dumps(result, indent=4))
+
+    def test_get_latest(self):
+        result = self.service.get_latest()
+
+        print(json.dumps(result, indent=4))
+
     def test_get_series(self):
         result = self.service.get_series()
 
@@ -41,7 +51,14 @@ class MyHitServiceTest(unittest.TestCase):
     #     print(json.dumps(result, indent=4))
 
     def test_get_movie(self):
-        id = '/movies/goto-22704'
+        id = '/movies/goto-22813-Approaching-the-Unknown'
+
+        result = self.service.get_movie(id)
+
+        print(json.dumps(result, indent=4))
+
+    def test_get_episode(self):
+        id = '/goto-28463-Arrow-S04E23'
 
         result = self.service.get_movie(id)
 

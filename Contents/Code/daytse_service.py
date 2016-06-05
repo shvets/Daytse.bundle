@@ -23,17 +23,27 @@ class DaytseService(HttpService):
     def get_latest_episodes(self, page=1):
         return self.get_category(category="episodes", page=page)
 
+    def get_latest(self, page=1):
+        return self.get_category(category=None, page=page)
+
     def get_category(self, category, page=1):
         result = []
 
-        page_path = "/" + category + "/index.php?" + "page=" + str(page)
+        if category:
+            page_path = "/" + category + "/index.php?" + "page=" + str(page)
+        else:
+            page_path = "/index.php?show=latest-topics&" + "page=" + str(page)
 
         document = self.fetch_document(self.URL + page_path, self.get_headers())
 
         items = document.xpath('//td[@class="topic_content"]')
 
         for item in items:
-            path = '/' + category + '/' + item.xpath("./div/a/@href")[0]
+            if category:
+                path = '/' + category + '/' + item.xpath("./div/a/@href")[0]
+            else:
+                path = '/' + item.xpath("./div/a/@href")[0]
+
             name = item.xpath("./div/a/img/@alt")[0]
             thumb = self.URL + item.xpath("./div/a/img/@src")[0]
 
@@ -148,7 +158,7 @@ class DaytseService(HttpService):
     def get_movie(self, id):
         result = {}
 
-        url = self.URL + id
+        url = self.http_request(self.URL + id, headers=self.get_headers()).url
 
         document = self.fetch_document(url, self.get_headers())
 
@@ -168,14 +178,57 @@ class DaytseService(HttpService):
 
         result['urls'] = []
 
+        # wpm_node = document.xpath('//iframe[@id="wpm"]')
+        #
+        # if len(wpm_node) > 0:
+        #     src = wpm_node[0].get('src')
+        #
+        #     document2 = self.fetch_document(self.URL + src, self.get_headers())
+        #
+        #     ggplayer_node = document2.xpath('//iframe[@id="ggplayer"]')
+        #
+        #     nodes = document2.xpath('//div/div')
+        #
+        #     cnt = 0
+        #     for node in nodes:
+        #         if node.get('id') and node.get('id')[0:4] == 'part':
+        #             cnt = cnt + 1
+        #
+        #     if len(wpm_node) > 0:
+        #         src = self.URL + ggplayer_node[0].get('src')
+        #
+        #         for index in range(cnt):
+        #             if index == 0:
+        #                 result['urls'].append(src)
+        #             else:
+        #                 result['urls'].append(src[0:len(src)-4] + str(index+1) + '.php')
+        #
+        # trailpm_node = document.xpath('//iframe[@id="trailpm"]')
+        #
+        # if len(trailpm_node) > 0:
+        #     src = trailpm_node[0].get('src')
+        #
+        #     document2 = self.fetch_document(self.URL + src, self.get_headers())
+        #
+        #     yttrailer_node = document2.xpath('//iframe[@id="yttrailer"]')
+        #
+        #     if len(yttrailer_node) > 0:
+        #         src = yttrailer_node[0].get('src')
+        #
+        #         result['trailer_url'] = src
+        #
+
+
         node1 = document.xpath("//iframe/@src")
 
-        if len(node1) > 1:
-            first_frame_url = node1[1]
-        elif len(node1) > 0:
-            first_frame_url = node1[0]
-        else:
-            first_frame_url = None
+        first_frame_url = node1[0]
+
+        # if len(node1) > 1:
+        #     first_frame_url = node1[1]
+        # elif len(node1) > 0:
+        #     first_frame_url = node1[0]
+        # else:
+        #     first_frame_url = None
 
         if first_frame_url:
             first_frame_data = self.fetch_document(self.URL + first_frame_url, self.get_headers())
@@ -213,10 +266,8 @@ class DaytseService(HttpService):
         if len(document.xpath("//iframe[contains(@src,'ytid=')]/@src")) > 0:
             el = self.URL + document.xpath("//iframe[contains(@src,'ytid=')]/@src")[0]
 
-            Log(el.split("?",1)[0])
-            Log(el.split("?",1)[0].replace("http://dayt.se/bits/pastube.php", "https://www.youtube.com/watch?v="))
-
             result['trailer_url'] = el.split("?",1)[0].replace("http://dayt.se/bits/pastube.php", "https://www.youtube.com/watch?v=") + el.split("=",1)[1]
+
 
         return result
 
