@@ -3,10 +3,7 @@
 import plex_util
 import pagination
 import history
-# from flow_builder import FlowBuilder
 from media_info import MediaInfo
-
-# builder = FlowBuilder()
 
 @route(PREFIX + "/movies")
 def HandleMovies(page=1):
@@ -219,24 +216,20 @@ def HandleMovie(operation=None, container=False, **params):
         else:
             url_name = name
 
-        oc.add(MetadataObjectForURL(url=url, thumb=thumb, title=url_name))
-
-        # media_info['name'] = url_name
-        # media_info['thumb'] = thumb
-        #
-        # url_items = [{
-        #     "url": url,
-        #     "config": {
-        #         # "container": 'MP4',
-        #         # "audio_codec": 'AAC',
-        #         # "video_codec": 'H264',
-        #     }
-        # }]
+        oc.add(VideoClipObject(
+            url=url,
+            thumb=plex_util.get_thumb(thumb),
+            title=unicode(L(url_name))
+        ))
 
         #oc.add(MetadataObjectForURL2(media_info=media_info, url_items=url_items, handler=HandleMovie, player=PlayVideo))
 
     if 'trailer_url' in response:
-        oc.add(MetadataObjectForURL(url=response['trailer_url'], thumb=thumb, title="Watch Trailer"))
+        oc.add(VideoClipObject(
+            url=response['trailer_url'],
+            thumb=plex_util.get_thumb(thumb),
+            title=unicode(L("Watch Trailer"))
+        ))
 
     if str(container) == 'False':
         history.push_to_history(Data, media_info)
@@ -252,15 +245,6 @@ def HandleMovie(operation=None, container=False, **params):
 #         params['type'] = 'movie'
 #
 #     return HandleContainer(**params)
-
-def MetadataObjectForURL(url, thumb, title):
-    metadata_object = VideoClipObject(
-        url=url,
-        thumb=plex_util.get_thumb(thumb),
-        title=unicode(L(title))
-    )
-
-    return metadata_object
 
 # def MetadataObjectForURL2(media_info, url_items, handler, player):
 #     metadata_object = builder.build_metadata_object(media_type=media_info['type'], title=media_info['name'])
@@ -354,23 +338,3 @@ def HandleHistory():
         service.queue.handle_queue_items(oc, HandleContainer, data)
 
     return oc
-
-# # @indirect
-# @route(PREFIX + '/play_video')
-# def PlayVideo(url, play_list=True):
-#     return Redirect(url)
-#
-#     # Log(url)
-#     # if not url:
-#     #     return plex_util.no_contents()
-#     # else:
-#     #     if str(play_list) == 'True':
-#     #         url = Callback(PlayList, url=url)
-#     #
-#     #     return IndirectResponse(MovieObject, key=HTTPLiveStreamURL(url))
-#
-# # @route(PREFIX + '/play_list.m3u8')
-# # def PlayList(url):
-# #     play_list = service.get_play_list(url)
-# #
-# #     return play_list
