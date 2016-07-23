@@ -51,7 +51,7 @@ class MyHitServiceTest(unittest.TestCase):
     #     print(json.dumps(result, indent=4))
 
     def test_get_movie(self):
-        id = '/movies/goto-22813-Approaching-the-Unknown'
+        id = '/watch/the-bronze'
 
         result = self.service.get_movie(id)
 

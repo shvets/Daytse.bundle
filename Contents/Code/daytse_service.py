@@ -7,7 +7,7 @@ import library_bridge
 from http_service import HttpService
 
 class DaytseService(HttpService):
-    URL = 'http://dayt.se'
+    URL = 'http://cyro.se'
 
     def available(self):
         document = self.fetch_document(self.URL, self.get_headers())
@@ -62,7 +62,7 @@ class DaytseService(HttpService):
 
         for item in items:
             path = "/movies/" + item.xpath("./div/a/@href")[0]
-            path = path[0:len(path)-1]
+            path = path[0:len(path)]
             thumb = self.URL + item.xpath("./div/a/img/@src")[0]
             name = thumb.rsplit("/", 1)[1].rsplit("-", 1)[0]
 
@@ -73,7 +73,8 @@ class DaytseService(HttpService):
     def get_genre(self, path, page=1):
         result = []
 
-        new_url = self.http_request(self.URL + self.get_corrected_path(path), headers=self.get_headers()).url
+        response = self.http_request(self.URL + self.get_corrected_path(path), headers=self.get_headers())
+        new_url = response.url
 
         new_path = new_url[len(self.URL):]
 
@@ -268,7 +269,6 @@ class DaytseService(HttpService):
 
             result['trailer_url'] = el.split("?",1)[0].replace("http://dayt.se/bits/pastube.php", "https://www.youtube.com/watch?v=") + el.split("=",1)[1]
 
-
         return result
 
     # def search(self, query):
@@ -343,16 +343,20 @@ class DaytseService(HttpService):
     def get_media_id(path):
         index = path.find('/goto-')
 
-        return path[index + 6:]
+        id_part = path[index + 6:]
+
+        return id_part[0:id_part.index('-')]
 
     @staticmethod
     def get_corrected_path(path):
         id = DaytseService.get_media_id(path)
 
-        return path.replace('goto-' + id, 'view.php?id=' + id)
+        index = path.find('goto-')
+
+        return path[0:index] + 'view.php?id=' + id
 
     @staticmethod
     def get_headers():
         return {
-            'User-Agent': 'Plex-User-Agent',
+            'User-Agent': 'Plex-User-Agent'
         }

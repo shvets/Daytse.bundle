@@ -224,12 +224,12 @@ def HandleMovie(operation=None, container=False, **params):
 
         #oc.add(MetadataObjectForURL2(media_info=media_info, url_items=url_items, handler=HandleMovie, player=PlayVideo))
 
-    if 'trailer_url' in response:
-        oc.add(VideoClipObject(
-            url=response['trailer_url'],
-            thumb=plex_util.get_thumb(thumb),
-            title=unicode(L("Watch Trailer"))
-        ))
+    # if 'trailer_url' in response:
+    #     oc.add(VideoClipObject(
+    #         url=response['trailer_url'],
+    #         thumb=plex_util.get_thumb(thumb),
+    #         title=unicode(L("Watch Trailer"))
+    #     ))
 
     if str(container) == 'False':
         history.push_to_history(Data, media_info)
