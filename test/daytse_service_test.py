@@ -58,7 +58,7 @@ class MyHitServiceTest(unittest.TestCase):
         print(json.dumps(result, indent=4))
 
     def test_get_episode(self):
-        id = '/goto-28463-Arrow-S04E23'
+        id = '/watch/the-grand-tour/s1/e2'
 
         result = self.service.get_movie(id)
 

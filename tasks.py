@@ -9,7 +9,7 @@ import ssh_client
 if 'USERNAME' in os.environ:
     username = os.environ['USERNAME']
 else:
-    username = 'alex'
+    username = 'alex1'
 
 if 'HOSTNAME' in os.environ:
     hostname = os.environ['HOSTNAME']
@@ -77,17 +77,20 @@ def copy(plugin_dir):
 def reload():
     import urllib2
 
-    url = "http://127.0.0.1:32400/:/plugins/com.plexapp.system/restart"
+    with open(os.getenv("HOME") + "/Dropbox/.plex-token") as f:
+        content = f.readlines()[0].strip()
+
+    url = "http://127.0.0.1:32400/:/plugins/com.plexapp.system/restart?X-Plex-Token=" + content
     urllib2.urlopen(url).read()
 
     print("Server was restarted.")
 
-    #run("tail -f ~/Library/Logs/PMS\ Plugin\ Logs/com.plexapp.plugins." + plugin_name + ".log")
+    run("tail -f ~/Library/Logs/Plex\ Media\ Server/PMS\ Plugin\ Logs/com.plexapp.plugins." + plugin_name + ".log")
 
 @task
 def deploy():
-    copy(plugin_dir)
     reset()
+    copy(plugin_dir)
     reload()
 
 @task
