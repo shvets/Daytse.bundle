@@ -9,7 +9,7 @@ import ssh_client
 if 'USERNAME' in os.environ:
     username = os.environ['USERNAME']
 else:
-    username = 'alex1'
+    username = 'alex'
 
 if 'HOSTNAME' in os.environ:
     hostname = os.environ['HOSTNAME']
